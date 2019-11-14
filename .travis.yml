@@ -1,0 +1,19 @@
+language: python
+
+python:
+  - 3.6
+  - 3.7
+  - 3.8
+
+before_install:
+  - wget http://kindlegen.s3.amazonaws.com/kindlegen_linux_2.6_i386_v2_9.tar.gz
+  - tar -xzvf kindlegen_linux_2.6_i386_v2_9.tar.gz
+  - pip install poetry
+  - pip install codecov
+
+install:
+  - poetry install
+
+script: poetry run pytest --cov=kmanga_mobi --cov-report xml --cov-report term-missing
+
+after_success: codecov
