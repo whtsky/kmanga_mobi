@@ -22,7 +22,8 @@ import os
 import unittest
 from unittest.mock import patch
 import shutil
-import xml.dom.minidom
+from lxml import etree
+from io import BytesIO
 
 from PIL import Image
 from PIL import ImageOps
@@ -32,7 +33,20 @@ from kmanga_mobi.mobi import WIDTH, HEIGHT
 
 KINDLEGEN_PATH = os.path.abspath('kindlegen')
 
-_xml_pretty = lambda x: xml.dom.minidom.parseString(x).toprettyxml(indent='  ')
+_lxml_parser = etree.XMLParser(remove_blank_text=True, encoding='utf-8')
+
+
+def c14n(xml: str):
+    xml_tree = etree.fromstring(xml.encode('utf-8'), _lxml_parser)
+    io = BytesIO()
+    xml_tree.getroottree().write_c14n(io)
+    return io.getvalue()
+
+
+
+
+def assert_xml_equal(a, b):
+    assert c14n(a) == c14n(b)
 
 
 class Info(object):
@@ -388,7 +402,7 @@ class TestMangaMobi(unittest.TestCase):
         self.mangamobi.content_opf(identifier='id')
         with open('fixtures/dummy/content.opf') as f1:
             with open('fixtures/dummy/content.opf.reference') as f2:
-                self.assertEqual(_xml_pretty(f1.read()), f2.read())
+                assert_xml_equal(f1.read(), f2.read())
 
     # XXX TODO - Since firmware 5.8.5 Virtual Panels feature seems
     # to be disabled, and the only way to zoom in a area (as far
@@ -399,7 +413,7 @@ class TestMangaMobi(unittest.TestCase):
     #     page = 'fixtures/dummy/html/page-000.html'
     #     with open(page) as f1:
     #         with open(page+'.no-panel-view.reference') as f2:
-    #             self.assertEqual(_xml_pretty(f1.read()), f2.read())
+    #             assert_xml_equal(f1.read(), f2.read())
 
     def test_page_panel_view(self):
         self.container.add_image(
@@ -409,19 +423,19 @@ class TestMangaMobi(unittest.TestCase):
         page = 'fixtures/dummy/html/page-000.html'
         with open(page) as f1:
             with open(page+'.panel-view.reference') as f2:
-                self.assertEqual(_xml_pretty(f1.read()), f2.read())
+                assert_xml_equal(f1.read(), f2.read())
 
     def test_toc_ncx(self):
         self.mangamobi.toc_ncx()
         with open('fixtures/dummy/toc.ncx') as f1:
             with open('fixtures/dummy/toc.ncx.reference') as f2:
-                self.assertEqual(_xml_pretty(f1.read()), f2.read())
+                assert_xml_equal(f1.read(), f2.read())
 
     def test_nav(self):
         self.mangamobi.nav()
         with open('fixtures/dummy/nav.xhtml') as f1:
             with open('fixtures/dummy/nav.xhtml.reference') as f2:
-                self.assertEqual(_xml_pretty(f1.read()), f2.read())
+                assert_xml_equal(f1.read(), f2.read())
 
     def test_style_css(self):
         self.mangamobi.style_css()
