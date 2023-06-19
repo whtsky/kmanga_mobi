@@ -9,7 +9,7 @@ authors = ["Alberto Planas <aplanas@gmail.com>", "Wu Haotian <whtsky@gmail.com>"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-pillow = "^6.2.1"
+pillow = "^9.5.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.4.3"
